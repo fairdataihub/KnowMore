@@ -54,8 +54,7 @@ tokenizer = nltk.RegexpTokenizer(r"\w+")
 
 def keywords_finder(text):
     """Return keywords after removing list of not required words."""
-    words = nlp(text).ents
-    return words
+    return nlp(text).ents
 
 
 def NestedDictValues(d):
@@ -111,8 +110,6 @@ def build_similarity_matrix(sentences, stop_words):
 def summariser(merged_text, top_n=5):
     sentences = sent_tokenize(merged_text)
     stop_words = stopwords.words('english')
-    summarize_text = []
-
     sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
 
     sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
@@ -120,11 +117,7 @@ def summariser(merged_text, top_n=5):
 
     ranked_sentence = sorted(
         ((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
-    # print("Indexes of top ranked_sentence order are ", ranked_sentence)
-
-    for i in range(top_n):
-        summarize_text.append(ranked_sentence[i][1])
-
+    summarize_text = [ranked_sentence[i][1] for i in range(top_n)]
     return " ".join(summarize_text)
 
 
@@ -169,11 +162,7 @@ def get_dataset_latest_version(datasetId):
     headers = {"Accept": "application/json"}
     response = requests.request("GET", url, headers=headers)
     response_json = json.loads(response.text)
-    if response.status_code == 200:
-        versionId = str(response_json['version'])
-    else:
-        versionId = ""
-    return versionId
+    return str(response_json['version']) if response.status_code == 200 else ""
 
 
 def get_dataset_file_response(datasetId, filepath):
@@ -188,10 +177,7 @@ def get_dataset_file_response(datasetId, filepath):
     }}
     headers = {"Content-Type": "application/json"}
     response = requests.request("POST", url, json=payload, headers=headers)
-    if response.status_code == 200:
-        return response
-    else:
-        return response.reason
+    return response if response.status_code == 200 else response.reason
 
 
 def get_dataset_file_download(datasetId, filepath):
@@ -206,8 +192,7 @@ def get_dataset_file_download(datasetId, filepath):
     }}
     headers = {"Content-Type": "application/json"}
 
-    response = requests.request("POST", url, json=payload, headers=headers)
-    return response
+    return requests.request("POST", url, json=payload, headers=headers)
 
 
 def get_dataset_description_text(datasetId):
@@ -239,11 +224,10 @@ def get_dataset_protocolsio_link(datasetId):
 
 def get_protocolsio_text(datasetId):
     data_protocol = {}
-    protocol_url = get_dataset_protocolsio_link(datasetId)
-    if protocol_url:
+    if protocol_url := get_dataset_protocolsio_link(datasetId):
         doi = protocol_url.rsplit('/', 1)[-1]
 
-        url = "https://www.protocols.io/api/v3/protocols/" + str(doi)
+        url = f"https://www.protocols.io/api/v3/protocols/{str(doi)}"
         querystring = {
             "Authorization": "76d6ca8285076f48fe611091fd97eab4bc1c65051da75d7dc70ce746bd64dbe6"}
         headers = {
@@ -321,13 +305,11 @@ def get_image_files(datasetId):
                 # Create an in-memory stream of the content
                 sio = io.BytesIO(response.content)
                 img = Image.open(sio)
-                image_name = str(datasetId) + "-" + \
-                    str(os.path.basename(filepath))
+                image_name = (f"{str(datasetId)}-" + str(os.path.basename(filepath)))
                 # img.save(image_name)
                 datafile_image[filepath] = img
             except:
                 print("NOT SAVED")
-                pass
     return datafile_image
 
 
@@ -338,8 +320,7 @@ def get_image_files_biolucida(datasetId):
         'token': ''
     }
     response = requests.request("GET", url, headers=headers, data=payload)
-    datafile_image = json.loads(response.text)
-    return datafile_image
+    return json.loads(response.text)
 
 
 def get_images_all_datasets(list_datasetId):
@@ -365,16 +346,12 @@ def get_images_all_datasets(list_datasetId):
 
 
 def get_knowledge_graph_data(datasetId):
-    # get species information from subjects file
-    # get specimen type and specimen anatomical location from samples.xlsx
-    data_knowledge_graph = {}
     filepath = "files/subjects.xlsx"
     response = get_dataset_file_response(datasetId, filepath)
     with io.BytesIO(response.content) as fh:
         df = pd.io.excel.read_excel(fh, engine='openpyxl')
     df.dropna(axis=0, how='all', inplace=True)
-    data_knowledge_graph['Species'] = df['species'].values[0]
-
+    data_knowledge_graph = {'Species': df['species'].values[0]}
     filepath = "files/samples.xlsx"
     response = get_dataset_file_response(datasetId, filepath)
     with io.BytesIO(response.content) as fh:
@@ -395,15 +372,13 @@ def sorted_nicely(l):
 
 
 def get_summary_table_data(datasetId):
-    # manifest.json: get dataset title, subtitle, publication date
-    # subjects.xlsx: species, n subjects, age range, sex
-    # samples.xlsx: n samples, specimen type, specimen anatomical location
-    data_table_summary = {}
     manifest_json = get_dataset_main_manifest(datasetId)
-    data_table_summary['Dataset id'] = datasetId
-    data_table_summary['Title'] = manifest_json['name']
-    data_table_summary['Subtitle'] = manifest_json['description']
-    data_table_summary['Publication_date'] = manifest_json['datePublished']
+    data_table_summary = {
+        'Dataset id': datasetId,
+        'Title': manifest_json['name'],
+        'Subtitle': manifest_json['description'],
+        'Publication_date': manifest_json['datePublished'],
+    }
 
     # subjects file
     filepath = "files/subjects.xlsx"
@@ -462,10 +437,7 @@ def get_all_datasets_text(list_datasetId):
     # protocol, and any text files in the datasets
     data_text = {}
     for datasetId in list_datasetId:
-        data_text[datasetId] = {}
-        # text from dataset description
-        data_text[datasetId]['description'] = get_dataset_description_text(
-            datasetId)
+        data_text[datasetId] = {'description': get_dataset_description_text(datasetId)}
         # text from protocol all nice and clean, includes title, description
         # and protocol steps
         data_text[datasetId]['protocol'] = get_protocolsio_text(datasetId)
@@ -520,10 +492,8 @@ def get_abstract(data_text):
     # text_to_summarise = " ".join(text_to_summarise)
 
     text_to_summarise = " ".join(list(NestedDictValues(data_text)))
-    abstract = summariser(text_to_summarise, top_n=10)
-
     # abstract = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-    return abstract
+    return summariser(text_to_summarise, top_n=10)
 
 
 def get_text_correlation(data_text):
@@ -602,8 +572,7 @@ def get_all_datasets_mat_files(list_datasetId):
     filepath_list = []
     for datasetId in list_datasetId:
         if datasetId in ['60', '64', '65']:
-            dataset_mat = get_dataset_mat_files(datasetId)
-            if dataset_mat:
+            if dataset_mat := get_dataset_mat_files(datasetId):
                 datasetId_path = os.path.join(
                     matlab_data_folder, str(datasetId))
                 os.makedirs(datasetId_path)
@@ -626,7 +595,7 @@ def get_all_datasets_mat_files(list_datasetId):
                         f.write(response.content)
     #                with open(mat_file_path, 'w', encoding="utf-8") as f:
     #                    f.write(response.text)
-    if len(full_datasetId_list) > 0:
+    if full_datasetId_list:
         df["datasetId"] = full_datasetId_list
         df["filepath"] = filepath_list
         matlab_excel_file = os.path.join(
@@ -690,12 +659,6 @@ input_file = os.path.join(input_dir, 'input.json')
 datasetIdsinput = json.load(open(input_file))
 list_datasetId = datasetIdsinput['datasetIds']
 list_datasetId = [str(x) for x in list_datasetId]
-#list_datasetId = ['60', '64', '65', '16', '61', '89', '97']
-#list_datasetId = ['60', '64', '65']
-
-# storage dict to be saved as a json and returned to front-end
-dataset_data = {}
-
 # knowledge graph data
 #dataset_data['knowledge_graph'] = {}
 # for datasetId in list_datasetId:
@@ -704,10 +667,12 @@ dataset_data = {}
 
 # summary table
 print("summary table")
-dataset_data['summary table'] = {}
-for datasetId in list_datasetId:
-    dataset_data['summary table'][datasetId] = get_summary_table_data(
-        datasetId)
+dataset_data = {
+    'summary table': {
+        datasetId: get_summary_table_data(datasetId)
+        for datasetId in list_datasetId
+    }
+}
 
 # keywords
 print("dataset text")
