@@ -58,9 +58,7 @@ def start_python_osparc_job(dataset_info):
         "input_2": path_for_input_json,
     }
 
-    payload = start_osparc_job("python", input_file_paths)
-
-    return payload
+    return start_osparc_job("python", input_file_paths)
 
 
 def start_matlab_osparc_job(matlab_zip_filepath):
@@ -71,9 +69,7 @@ def start_matlab_osparc_job(matlab_zip_filepath):
         "input_1": matlab_zip_filepath,
     }
 
-    payload = start_osparc_job("matlab", input_file_paths)
-
-    return payload
+    return start_osparc_job("matlab", input_file_paths)
 
 def start_osparc_job(job_type, input_file_paths):
     """
@@ -298,11 +294,11 @@ def check_job_status(job_type, job_id):
                 # output_2 = 4.0
 
                 # we're only taking the first one
-                print(f"Now downloading to disk path:")
+                print("Now downloading to disk path:")
                 results_file: File = outputs.results[output_result_to_use]
                 #print(f"file id: {results_file.id}")
                 download_path: str = files_api.download_file(file_id=results_file.id)
-                
+
                 print(f"Download path: {download_path}")
 
                 payload = {
@@ -425,6 +421,4 @@ def get_static_dir_for_job(job_id):
     """
     takes job_id and returns the static dir for that job, where frontend can access it
     """
-    dir_path_for_job_outputs = os.path.join(static_dir, "jobs-results", job_id)
-
-    return dir_path_for_job_outputs
+    return os.path.join(static_dir, "jobs-results", job_id)
