@@ -75,7 +75,7 @@ function main(InputDataDirectory)
 
 
 %Create an OS-agnostic path to the Excel file that defines the datasets
-ExcelInputFile = fullfile(InputDataDirectory, 'matlab_input.xlsx');
+ExcelInputFile = fulfile(InputDataDirectory, 'matlab_input.xlsx');
 
 %Ensure that InputDataDirectory exists
 if ~isdir(InputDataDirectory)
@@ -86,8 +86,8 @@ elseif ~exist(ExcelInputFile,'file')
     errordlg(['The file matlab-input.xlsx does not exist in ' InputDataDirectory],'Missing File');
     
 %Ensure there's a data directory there (don't check to see if the data are there yet)
-elseif ~isdir(fullfile(InputDataDirectory,'matlab_data'))
-    errordlg([fullfile(InputDataDirectory,'matlab_data') ' is not a directory.'],'Invalid Path');
+elseif ~isdir(fulfile(InputDataDirectory,'matlab_data'))
+    errordlg([fulfile(InputDataDirectory,'matlab_data') ' is not a directory.'],'Invalid Path');
     
 %all good so far, commence with processing    
 else
@@ -109,7 +109,7 @@ else
         %Process each data set
         for TempDataSet=1:size(Sheet1,1)
             %Load the mat file
-            MatFile=fullfile(InputDataDirectory,'matlab_data',num2str(Sheet1.datasetId(TempDataSet)), Sheet1.filepath{TempDataSet});
+            MatFile=fulfile(InputDataDirectory,'matlab_data',num2str(Sheet1.datasetId(TempDataSet)), Sheet1.filepath{TempDataSet});
             TempData=load(MatFile);
             
             %Build a table for the variables in this dataset

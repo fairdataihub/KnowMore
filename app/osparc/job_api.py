@@ -249,7 +249,7 @@ def check_job_status(job_type, job_id):
     payload = {}
 
     if OSPARC_TEST_MODE or job_id == "fake-job-for-testing":
-        # this is test mode, send back sucessful and mock data
+        # this is test mode, send back successful and mock data
 
 
         payload = {
