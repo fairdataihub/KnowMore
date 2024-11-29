@@ -35,15 +35,17 @@ def set_routes(app):
 
         dataset_dict = request.json
         if dataset_dict.get("datasetIds", False) == False:
-            error_message = make_response("Invalid data: need a json with key 'datasetIds' and value an array of integers", 400)
-            return error_message
+            return make_response(
+                "Invalid data: need a json with key 'datasetIds' and value an array of integers",
+                400,
+            )
+
 
         print("json:", request.json)
 
         payload = job_api.start_python_osparc_job(dataset_dict)
 
-        resp = make_response(json.dumps(payload), payload["status_code"])
-        return resp
+        return make_response(json.dumps(payload), payload["status_code"])
 
 
     # letting cors get setup in settings.py instead
@@ -61,8 +63,7 @@ def set_routes(app):
         elif job_type == "matlab":
             payload = job_api.check_matlab_job_status(job_id)
 
-        resp = make_response(json.dumps(payload), payload["status_code"])
-        return resp
+        return make_response(json.dumps(payload), payload["status_code"])
 
     # e.g., http://localhost:5000/api/results-images/example-job-id/Plots-3.x.png
     @app.route('/api/results-images/<string:job_id>/<string:image_name>', methods=['GET'])
